@@ -1,76 +1,104 @@
-"use client"; // Necessário para usar useState no Next.js App Router
+"use client";
 
 import React, { useState } from 'react';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Definindo a interface diretamente aqui para evitar o erro de importação
-interface Story {
-  id: number;
-  visual: string;
-  legenda: string;
-  fala: string;
-}
+export default function StoryApp() {
+  const [prompt, setPrompt] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [story, setStory] = useState({ 
+    visual: "Aguardando seu tema...", 
+    legenda: "A legenda aparecerá aqui", 
+    fala: "O script de fala aparecerá aqui" 
+  });
 
-const StoryCard = () => {
-  const [copied, setCopied] = useState<string | null>(null);
+  async function gerarStory() {
+    if (!prompt) return alert("Por favor, digite um tema para o story!");
+    setLoading(true);
 
-  // Dados de exemplo para o App não abrir vazio
-  const story: Story = {
-    id: 1,
-    visual: "Mostre os bastidores do seu dia a dia usando o app.",
-    legenda: "Criando conteúdo com inteligência artificial! 🚀",
-    fala: "Fala pessoal! Hoje vou mostrar como estou usando o Gemini para automatizar meus stories."
-  };
+    try {
+      // Tenta ler a chave dos dois nomes possíveis
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_KEY || "";
+      
+      if (!apiKey) {
+        alert("Erro: API Key não encontrada no Vercel!");
+        setLoading(false);
+        return;
+      }
 
-  const copyToClipboard = (text: string, type: string) => {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const instrucao = `Crie um roteiro de story para Instagram sobre: ${prompt}. 
+      Responda APENAS em formato JSON, sem comentários, com as chaves "visual", "legenda" e "fala".`;
+      
+      const result = await model.generateContent(instrucao);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Limpa o texto caso a IA mande blocos de código ```json
+      const cleanJson = JSON.parse(text.replace(/```json|```/g, ""));
+      
+      setStory(cleanJson);
+    } catch (error) {
+      console.error(error);
+      alert("Ocorreu um erro ao gerar o conteúdo. Verifique sua chave no painel da Vercel.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    setCopied(type);
-    setTimeout(() => setCopied(null), 2000);
+    alert("Copiado!");
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-900 p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl transition-all hover:border-blue-500/50 max-w-md w-full">
-        <div className="flex items-center justify-between mb-4">
-          <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-            Story {story.id}
-          </span>
+    <div style={{ 
+      backgroundColor: '#0f172a', 
+      minHeight: '100vh', 
+      color: 'white', 
+      padding: '20px', 
+      fontFamily: 'system-ui, sans-serif',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center'
+    }}>
+      <div style={{ maxWidth: '450px', width: '100%' }}>
+        <header style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <h1 style={{ color: '#3b82f6', marginBottom: '5px' }}>📸 Story AI Studio</h1>
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>Crie conteúdos profissionais em segundos</p>
+        </header>
+        
+        <div style={{ marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <input 
+            style={{ 
+              width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #334155', 
+              backgroundColor: '#1e293b', color: 'white', fontSize: '16px', outline: 'none'
+            }}
+            placeholder="Ex: Mostrando os bastidores do escritório..."
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+          <button 
+            onClick={gerarStory}
+            disabled={loading}
+            style={{ 
+              width: '100%', padding: '15px', borderRadius: '12px', backgroundColor: '#2563eb', 
+              color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer',
+              opacity: loading ? 0.7 : 1, transition: '0.3s'
+            }}
+          >
+            {loading ? "🤖 CRIANDO ROTEIRO..." : "✨ GERAR STORY"}
+          </button>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="text-blue-400 text-xs font-semibold uppercase block mb-1">🎥 O que gravar (Visual)</label>
-            <p className="text-slate-200 text-sm leading-relaxed">{story.visual}</p>
-          </div>
-
-          <div className="relative group">
-            <label className="text-blue-400 text-xs font-semibold uppercase block mb-1">📝 O que escrever (Legenda)</label>
-            <div className="flex items-start gap-2">
-              <p className="text-slate-200 text-sm italic flex-grow">"{story.legenda}"</p>
-              <button 
-                onClick={() => copyToClipboard(story.legenda, 'legenda')}
-                className="text-slate-400 hover:text-white transition-colors text-xs border border-slate-600 px-2 py-1 rounded"
-              >
-                {copied === 'legenda' ? "✅" : "📋 Copiar"}
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
-            <label className="text-blue-400 text-xs font-semibold uppercase block mb-1">💬 O que falar (Script)</label>
-            <div className="flex items-start gap-2">
-              <p className="text-slate-300 text-sm leading-relaxed flex-grow">{story.fala}</p>
-              <button 
-                onClick={() => copyToClipboard(story.fala, 'fala')}
-                className="text-slate-400 hover:text-white transition-colors text-xs border border-slate-600 px-2 py-1 rounded"
-              >
-                {copied === 'fala' ? "✅" : "📋 Copiar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default StoryCard;
+        <div style={{ backgroundColor: '#1e293b', padding: '25px', borderRadius: '20px', border: '1px solid #334155', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
+          <section style={{ marginBottom: '20px' }}>
+            <label style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px' }}>🎥 O QUE GRAVAR</label>
+            <p style={{ fontSize: '15px', marginTop: '5px', lineHeight: '1.5' }}>{story.visual}</p>
+          </section>
+          
+          <section style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0f172a', borderRadius: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 'bold
