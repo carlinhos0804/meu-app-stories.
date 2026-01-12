@@ -10,14 +10,11 @@
     "react": "latest",
     "react-dom": "latest",
     "next": "latest",
-    "lucide-react": "latest"
+    "@google/generative-ai": "latest"
   },
   "devDependencies": {
     "typescript": "latest",
     "@types/react": "latest",
-    "@types/node": "latest",
-    "tailwindcss": "latest",
-    "postcss": "latest",
-    "autoprefixer": "latest"
+    "@types/node": "latest"
   }
 }
