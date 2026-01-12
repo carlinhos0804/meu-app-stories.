@@ -8,14 +8,14 @@
     "start": "next start"
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "latest",
+    "react-dom": "latest",
     "next": "latest",
-    "@google/generative-ai": "^0.21.0"
+    "@google/generative-ai": "0.21.0"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "@types/react": "^19.0.0",
-    "@types/node": "^20"
+    "typescript": "latest",
+    "@types/react": "latest",
+    "@types/node": "latest"
   }
 }
