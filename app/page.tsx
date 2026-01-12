@@ -12,39 +12,37 @@ export default function StoryApp() {
     fala: "O script de fala aparecerá aqui" 
   });
 
-  async function gerarStory() {
+ async function gerarStory() {
     if (!prompt) return alert("Por favor, digite um tema!");
     setLoading(true);
 
     try {
-      // USANDO O NOVO NOME QUE O VERCEL LIBERA PARA O NAVEGADOR
       const apiKey = process.env.NEXT_PUBLIC_GEMINI_KEY || "";
-      
-      if (!apiKey) {
-        alert("Chave não encontrada! Verifique se criou NEXT_PUBLIC_GEMINI_KEY no Vercel e deu Redeploy.");
-        setLoading(false);
-        return;
-      }
-
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      // Forçando uma versão estável e simplificada
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+      });
 
-      const instrucao = `Crie um roteiro de story para Instagram sobre: ${prompt}. 
-      Responda APENAS em formato JSON puro, sem textos extras, com as chaves: visual, legenda, fala.`;
+      const instrucao = `Crie um roteiro de story para Instagram sobre: ${prompt}. Responda apenas com o JSON: {"visual": "...", "legenda": "...", "fala": "..."}`;
       
       const result = await model.generateContent(instrucao);
       const text = result.response.text();
       
-      const cleanJson = JSON.parse(text.replace(/```json|```/g, ""));
+      // Tenta limpar possíveis marcações de markdown da IA
+      const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
+      const cleanJson = JSON.parse(jsonString);
+      
       setStory(cleanJson);
-    } catch (error) {
-      console.error(error);
-      alert("Erro ao conectar com a IA. Tente novamente em instantes.");
+    } catch (error: any) {
+      console.error("Erro detalhado:", error);
+      // Isso vai nos mostrar o erro real no seu celular
+      alert("Erro do Google: " + (error.message || "Falha na conexão"));
     } finally {
       setLoading(false);
     }
   }
-
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: 'white', padding: '20px', fontFamily: 'sans-serif' }}>
       <div style={{ maxWidth: '400px', margin: '0 auto' }}>
