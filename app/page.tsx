@@ -21,7 +21,7 @@ export default function StoryApp() {
       const genAI = new GoogleGenerativeAI(apiKey);
       
       // Forçando uma versão estável e simplificada
-      const model = genAI.getGenerativeModel({ 
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   model: "gemini-1.5-flash-latest", // Adicionamos o "-latest" para forçar a versão atual
 });
 
