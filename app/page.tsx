@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default function StoryApp() {
-  const [prompt, setPrompt] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [story, setStory] = useState({ visual: "...", legenda: "...", fala: "..." });
+  const result = await model.generateContent(instrucao);
+const response = await result.response;
+const text = response.text();
 
   async function gerarStory() {
     if (!prompt) return alert("Digite um tema!");
