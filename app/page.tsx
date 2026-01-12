@@ -1,103 +1,65 @@
 "use client";
 
 import React, { useState } from 'react';
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default function StoryApp() {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
-  const [story, setStory] = useState({ 
-    visual: "Aguardando seu tema...", 
-    legenda: "A legenda aparecerá aqui", 
-    fala: "O script de fala aparecerá aqui" 
-  });
+  const [story, setStory] = useState({ visual: "...", legenda: "...", fala: "..." });
 
   async function gerarStory() {
-    if (!prompt) return alert("Por favor, digite um tema!");
+    if (!prompt) return alert("Digite um tema!");
     setLoading(true);
 
     try {
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_KEY || "";
+      // Tenta pegar a chave de qualquer um dos nomes que você possa ter colocado
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_KEY || "";
       
-      if (!apiKey || apiKey.length < 10) {
-        throw new Error("API Key inválida ou não configurada no Vercel (NEXT_PUBLIC_GEMINI_KEY)");
+      if (!apiKey) {
+        alert("ERRO LOCAL: A chave não foi encontrada no Vercel. Verifique o nome da variável!");
+        setLoading(false);
+        return;
       }
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      
-      // Ajuste para usar a versão estável do modelo
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-      });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const generationConfig = {
-        temperature: 0.7,
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 1000,
-      };
-
-      const instrucao = `Crie um roteiro de story para Instagram sobre: ${prompt}. 
-      Responda APENAS em formato JSON puro, sem textos extras, com as chaves: visual, legenda, fala.`;
+      const instrucao = `Gere um JSON para story de instagram sobre ${prompt}. Use as chaves "visual", "legenda" e "fala".`;
       
-      const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: instrucao }] }],
-        generationConfig,
-      });
-
-      const text = result.response.text();
+      const result = await model.generateContent(instrucao);
+      const text = result.response.text().replace(/```json|```/g, "").trim();
       
-      // Limpeza profunda do JSON para evitar erros de sintaxe
-      const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
-      const cleanJson = JSON.parse(jsonString);
-      
-      setStory(cleanJson);
+      setStory(JSON.parse(text));
     } catch (error: any) {
-      console.error(error);
-      // Mensagem detalhada para sabermos o que está errado
-      alert("ERRO: " + (error.message.includes("403") ? "Chave sem permissão (Verifique o Google Cloud)" : error.message));
+      // ESTE ALERTA VAI TE DIZER O ERRO REAL
+      alert("ERRO DA IA: " + error.message);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: 'white', padding: '20px', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ maxWidth: '400px', width: '100%' }}>
-        <h1 style={{ color: '#3b82f6', textAlign: 'center', fontSize: '22px', marginBottom: '20px' }}>📸 Story Studio AI</h1>
-        
-        <input 
-          style={{ width: '100%', padding: '15px', borderRadius: '10px', marginBottom: '10px', color: '#000', border: 'none', fontSize: '16px', boxSizing: 'border-box' }}
-          placeholder="Ex: Rotina de treino hoje"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-        />
-        
-        <button 
-          onClick={gerarStory}
-          disabled={loading}
-          style={{ width: '100%', padding: '15px', borderRadius: '10px', backgroundColor: loading ? '#64748b' : '#2563eb', color: 'white', fontWeight: 'bold', border: 'none', marginBottom: '20px', cursor: 'pointer' }}
-        >
-          {loading ? "PROCESSANDO..." : "✨ GERAR COM GEMINI"}
-        </button>
+    <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: 'white', padding: '20px', fontFamily: 'sans-serif' }}>
+       <h2 style={{ textAlign: 'center' }}>📸 Gerador de Stories</h2>
+       <input 
+         style={{ width: '100%', padding: '12px', borderRadius: '8px', color: '#000', marginBottom: '10px' }}
+         placeholder="Sobre o que vamos gravar?"
+         onChange={(e) => setPrompt(e.target.value)}
+       />
+       <button 
+         onClick={gerarStory} 
+         disabled={loading}
+         style={{ width: '100%', padding: '12px', backgroundColor: '#2563eb', border: 'none', borderRadius: '8px', color: 'white', fontWeight: 'bold' }}
+       >
+         {loading ? "GERANDO..." : "CRIAR AGORA"}
+       </button>
 
-        <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '15px', border: '1px solid #334155' }}>
-          <div style={{ marginBottom: '15px' }}>
-            <p style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 'bold', margin: '0 0 5px 0' }}>🎥 O QUE GRAVAR</p>
-            <p style={{ fontSize: '14px', margin: 0 }}>{story.visual}</p>
-          </div>
-          
-          <div style={{ marginBottom: '15px' }}>
-            <p style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 'bold', margin: '0 0 5px 0' }}>📝 LEGENDA</p>
-            <p style={{ fontSize: '14px', margin: 0, fontStyle: 'italic' }}>"{story.legenda}"</p>
-          </div>
-          
-          <div>
-            <p style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 'bold', margin: '0 0 5px 0' }}>💬 SCRIPT DE FALA</p>
-            <p style={{ fontSize: '14px', margin: 0 }}>{story.fala}</p>
-          </div>
-        </div>
-      </div>
+       <div style={{ marginTop: '20px', background: '#1e293b', padding: '15px', borderRadius: '10px' }}>
+          <p><b>Visual:</b> {story.visual}</p>
+          <p><b>Legenda:</b> {story.legenda}</p>
+          <p><b>Fala:</b> {story.fala}</p>
+       </div>
     </div>
   );
 }
