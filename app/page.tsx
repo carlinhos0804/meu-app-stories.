@@ -18,7 +18,7 @@ export default function StoryApp() {
 
     try {
       // Aqui usamos o nome que o Vercel aceitou
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_KEY || "";
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_KEY || "";
       
       if (!apiKey) {
         alert("Erro: Configure a variável GEMINI_KEY no Vercel!");
