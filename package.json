@@ -1,0 +1,16 @@
+{
+  "name": "meu-app-stories",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "react": "latest",
+    "react-dom": "latest",
+    "next": "latest",
+    "lucide-react": "latest",
+    "@google/generative-ai": "latest"
+  }
+}
