@@ -1,6 +1,21 @@
-"dependencies": {
-  "react": "latest",
-  "react-dom": "latest",
-  "next": "latest",
-  "@google/generative-ai": "^0.21.0" 
+{
+  "name": "meu-app-stories",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "react": "^18",
+    "react-dom": "^18",
+    "next": "14.2.3",
+    "@google/generative-ai": "^0.11.0"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/react": "^18",
+    "@types/node": "^20"
+  }
 }
