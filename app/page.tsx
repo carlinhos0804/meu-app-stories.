@@ -3,72 +3,65 @@
 import React, { useState } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export default function Page() {
+export default function ShareStream() {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
-  const [story, setStory] = useState({ 
-    visual: "Aguardando...", legenda: "...", fala: "..." 
-  });
+  const [result, setResult] = useState<any>(null);
 
-  async function gerarStory() {
-    if (!prompt) return alert("Digite um tema!");
+  async function gerarConteudo() {
+    if (!prompt) return;
     setLoading(true);
-
     try {
-      // Usando o nome mais genérico possível para o Vercel aceitar
-      const apiKey = process.env.NEXT_PUBLIC_API_KEY || "";
-      
-      if (!apiKey) {
-        alert("Erro: Adicione a variável NEXT_PUBLIC_API_KEY no Vercel e dê Redeploy!");
-        setLoading(false);
-        return;
-      }
-
-      const genAI = new GoogleGenerativeAI(apiKey);
+      const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_KEY || "");
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-      const instrucao = `Gere um JSON para story de instagram sobre ${prompt}. Responda apenas o JSON com chaves: visual, legenda, fala.`;
       
-      const result = await model.generateContent(instrucao);
-      const text = result.response.text().replace(/```json|```/g, "").trim();
-      
-      setStory(JSON.parse(text));
-    } catch (error: any) {
-      alert("Erro: " + error.message);
+      const promptFinal = `Crie um roteiro de story para Instagram sobre: ${prompt}. Responda apenas um JSON com: visual, legenda, fala.`;
+      const res = await model.generateContent(promptFinal);
+      const text = res.response.text().replace(/```json|```/g, "").trim();
+      setResult(JSON.parse(text));
+    } catch (e) {
+      alert("Conectando com a base...");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ backgroundColor: '#020617', minHeight: '100vh', color: 'white', padding: '20px', fontFamily: 'sans-serif' }}>
+    <div style={{ backgroundColor: '#000', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', padding: '20px' }}>
       <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-        <h2 style={{ textAlign: 'center', color: '#3b82f6' }}>Story AI Studio</h2>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', letterSpacing: '-1px', marginBottom: '20px', color: '#3b82f6' }}>SHARE STREAM</h1>
         
         <input 
-          style={{ width: '100%', padding: '15px', borderRadius: '10px', marginBottom: '10px', color: '#000', border: 'none' }}
-          placeholder="Tema do Story..."
+          style={{ width: '100%', padding: '16px', borderRadius: '12px', backgroundColor: '#111', border: '1px solid #333', color: '#fff', fontSize: '16px', marginBottom: '10px', outline: 'none' }}
+          placeholder="O que vamos criar hoje?"
+          value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
         />
         
         <button 
-          onClick={gerarStory} 
+          onClick={gerarConteudo}
           disabled={loading}
-          style={{ width: '100%', padding: '15px', borderRadius: '10px', backgroundColor: '#2563eb', color: 'white', border: 'none', fontWeight: 'bold' }}
+          style={{ width: '100%', padding: '16px', borderRadius: '12px', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', border: 'none', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
         >
-          {loading ? "GERANDO..." : "CRIAR STORY AGORA"}
+          {loading ? "PROCESSANDO..." : "GERAR STORY"}
         </button>
 
-        <div style={{ marginTop: '20px', backgroundColor: '#1e293b', padding: '20px', borderRadius: '15px' }}>
-          <p style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: '12px' }}>🎥 VISUAL</p>
-          <p style={{ fontSize: '14px' }}>{story.visual}</p>
-          <hr style={{ borderColor: '#334155', margin: '15px 0' }} />
-          <p style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: '12px' }}>📝 LEGENDA</p>
-          <p style={{ fontSize: '14px' }}>{story.legenda}</p>
-          <hr style={{ borderColor: '#334155', margin: '15px 0' }} />
-          <p style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: '12px' }}>💬 FALA</p>
-          <p style={{ fontSize: '14px' }}>{story.fala}</p>
-        </div>
+        {result && (
+          <div style={{ marginTop: '30px', animation: 'fadeIn 0.5s ease' }}>
+            <div style={{ marginBottom: '20px' }}>
+              <span style={{ color: '#666', fontSize: '12px', fontWeight: 'bold' }}>SCENE</span>
+              <p style={{ fontSize: '16px', marginTop: '5px' }}>{result.visual}</p>
+            </div>
+            <div style={{ marginBottom: '20px', backgroundColor: '#111', padding: '15px', borderRadius: '10px' }}>
+              <span style={{ color: '#3b82f6', fontSize: '12px', fontWeight: 'bold' }}>OVERLAY TEXT</span>
+              <p style={{ fontSize: '16px', marginTop: '5px', fontStyle: 'italic' }}>"{result.legenda}"</p>
+            </div>
+            <div style={{ backgroundColor: '#111', padding: '15px', borderRadius: '10px' }}>
+              <span style={{ color: '#10b981', fontSize: '12px', fontWeight: 'bold' }}>SCRIPT</span>
+              <p style={{ fontSize: '16px', marginTop: '5px' }}>{result.fala}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
