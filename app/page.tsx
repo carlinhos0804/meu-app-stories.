@@ -22,8 +22,8 @@ export default function StoryApp() {
       
       // Forçando uma versão estável e simplificada
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-      });
+  model: "gemini-1.5-flash-latest", // Adicionamos o "-latest" para forçar a versão atual
+});
 
       const instrucao = `Crie um roteiro de story para Instagram sobre: ${prompt}. Responda apenas com o JSON: {"visual": "...", "legenda": "...", "fala": "..."}`;
       
